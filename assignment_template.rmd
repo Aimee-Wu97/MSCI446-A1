@@ -192,10 +192,10 @@ In case you want to take a picture (screenshot) of your notebook (tablet), you c
 ```{r,results='asis'}
 library('knitr')
 #X
-X <- c(1,2,3)
+X <- c(1,2,170)
 #Y
-Y <- c(4,5,6)
-column.names <- c("Height","Weight")
+Y <- c(4,5,66)
+column.names <- c("Height (cm)","Weight (kg)")
 row.names <- c("Andy","Aimee","Morgan")
 result <- array(c(X,Y),dim = c(3,2),dimnames = list(row.names,column.names))
 kable(result,caption = 'Simple Dataset')
