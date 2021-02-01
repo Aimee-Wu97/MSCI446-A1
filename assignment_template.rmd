@@ -1,13 +1,13 @@
 ---
 title: 'Lab Report 1'
-author: "Andy Tan, Aimee Wu and Morgan Yeung"
+author: "your name here"
 geometry: margin=.75in
 output:
+  pdf_document: default
+  word_document: default
   html_document:
     df_print: paged
     theme: cosmo
-  word_document: default
-  pdf_document: default
 header-includes:
 - \usepackage{graphicx}
 - \usepackage{color}
@@ -29,27 +29,29 @@ Give basic insights into your numeric variable you have picked as output variabl
 - What are the min / max values and median of the output variable, $Y$?
 - What is median of the output value among different classes of the categorical variable you picked? You must use `group_by` and `summarize` functions.
 
+
 ```{r}
 library('tidyverse')
-animeall <- read.csv('data/anime.csv')
-anime <- subset(animeall, 
+Anime<- read.csv('anime.csv') %>%
+  na.omit(cols = 'score')
+anime <- subset(Anime, 
                 genre %in% c('Action', 'Drama', 'Space', 'Comedy', 'Supernatural', 'Fantasy'))
 rmarkdown::paged_table(anime)
 ```
 ```{r}
 anime %>% 
-  select(popularity) %>% 
-  summarize(popu_max = max(popularity),
-            popu_min = min(popularity))
+  select(score) %>% 
+  summarize(rank_max = max(score),
+            rank_min = min(score))
 ```
 
 ```{r}
 anime %>% 
-  select(popularity, genre) %>% 
+  select(score, genre) %>% 
   group_by(genre) %>% 
-  summarise(popularity_median = median(popularity),
-            popularity_max  = max(popularity),
-            popularity_min = min(popularity))
+  summarise(rank_median = median(score),
+            rank_max  = max(score),
+            rank_min = min(score))
 ```
 
 ### 1.2. (10 pts) 
@@ -58,20 +60,20 @@ Visualize the variables you selected.
 
 - Draw histogram of the numeric variables you selected.
 ```{r}
-ggplot(anime, aes(x=popularity)) + 
+ggplot(anime, aes(x=score)) + 
   geom_histogram(colour='white') 
 ```
 
 - Draw distribution of the output variable $Y$ with respect to the different classes of your categorical variable. The plot must somehow show the distributional differences among different classes. You can use boxplot, histogram, or other visuals (e.g. density ringes).
 ```{r}
-ggplot(anime, aes(x=popularity, y=genre, colour=genre)) + 
+ggplot(anime, aes(x=score, y=genre, colour=genre)) + 
   geom_boxplot() 
 ```
 
 - Draw scatter plot between one of your numeric inputs and the output variable. Discuss whether the plot indicate a relation, if it is linear, if there are outliers? Feel free to remove the outlier. Feel free to transform the data.
 
 ```{r}
-ggplot(anime, aes(y=popularity, x=rank, colour=genre)) + 
+ggplot(anime, aes(y=score, x=rank, colour=genre)) + 
   geom_point() 
 ```
 
@@ -87,19 +89,19 @@ Using the all dataset, fit a regression:
 	- Plot the input and output variables in a scatter plot and add the predicted values as a line.
 	- Interpret the results. Is it a good fit? Is your input variable good in explaining the outputs?
 ```{r}
-fit1 <- lm(popularity ~ rank, data = animeall)
+fit1 <- lm(score ~ rank, data = Anime)
 fit1
 ```
 ```{r}
 summary(fit1)
 ```
 ```{r}
-ggplot(animeall, aes(y=popularity, x=rank, colour=genre)) + 
+ggplot(Anime, aes(y=score, x=rank, colour=genre)) + 
   geom_point() 
 ```
 ```{r}
 library('ggExtra')
-g <- ggplot(animeall, aes(y=log(popularity), x=log(rank), colour=genre)) + 
+g <- ggplot(Anime, aes(y=log(score), x=log(rank), colour=genre)) + 
   geom_point(alpha=.3) + 
   theme(legend.position = 'none') 
 ggMarginal(g, type='histogram')
@@ -112,7 +114,7 @@ ggMarginal(g, type='histogram')
    - Interpret the results. Is it a good fit? Are the input variables good in explaining the outputs?
 
 ```{r}
-fit2 <- lm(popularity ~ rank + members + episodes + favorites, data = animeall)
+fit2 <- lm(score ~ rank + members + episodes + favorites, data = Anime)
 summary(fit2)$coefficients
 ```
 ```{r}
@@ -123,11 +125,11 @@ sigma(fit2)
 3. Now, do the same things as you did, but this time add an interaction between one categorical and one numeric variable.
    - Write down the model, fit to the data, summarize and interpret the results.
 ```{r}
-fit3 <- lm(popularity ~ rank + members + episodes + type, data = animeall)
+fit3 <- lm(score ~ rank + members + source, data = Anime)
 summary(fit3)$coefficients
 ```
 ```{r}
-fit4 <- lm(popularity ~ rank + members + episodes + type + rank:type, data = animeall)
+fit4 <- lm(score ~ rank + members + source + rank:source, data = Anime)
 summary(fit3)$coefficients
 ```
 ```{r}
@@ -149,22 +151,22 @@ In this section, you will do the same you did in 1.3, but this time you will fir
 ```{r}
 set.seed(156) # Set seed is needed if we want 
 # to get the same random numbers always
-train_size <- floor(0.8 * nrow(animeall))
-train_inds <- sample(1:nrow(animeall), size = train_size)
-test_inds  <- setdiff(1:nrow(animeall), train_inds)
+train_size <- floor(0.8 * nrow(Anime))
+train_inds <- sample(1:nrow(Anime), size = train_size)
+test_inds  <- setdiff(1:nrow(Anime), train_inds)
 
-train <- animeall[ train_inds , ] 
-test  <- animeall[ test_inds , ]
+train <- Anime[ train_inds , ] 
+test  <- Anime[ test_inds , ]
 
 cat('train size:', nrow(train), '\ntest size:', nrow(test))
 ```
 
 ```{r}
 library('caret')
-fit1 <- lm(popularity ~ rank, data = train)
-fit2 <- lm(popularity ~ rank + members + episodes + favorites, data = train)
-fit3 <- lm(popularity ~ rank + members + episodes + type, data = train)
-fit4 <- lm(popularity ~ rank + members + episodes + type + rank:type, data = train)
+fit1 <- lm(score ~ rank, data = train)
+fit2 <- lm(score ~ rank + members + episodes + favorites, data = train)
+fit3 <- lm(score ~ rank + members + source, data = train)
+fit4 <- lm(score ~ rank + members + source + rank:source, data = train)
 
 pred1 <- predict(fit1, newdata=test)
 pred2 <- predict(fit2, newdata=test)
@@ -172,10 +174,10 @@ pred3 <- predict(fit3, newdata=test)
 pred4 <- predict(fit4, newdata=test)
 
 
-rmse1 <- RMSE(pred1, test$popularity)
-rmse2 <- RMSE(pred2, test$popularity)
-rmse3 <- RMSE(pred3, test$popularity)
-rmse4 <- RMSE(pred4, test$popularity)
+rmse1 <- RMSE(pred1, test$score)
+rmse2 <- RMSE(pred2, test$score)
+rmse3 <- RMSE(pred3, test$score)
+rmse4 <- RMSE(pred4, test$score)
 
 
 rmses <- c(rmse1,rmse2,rmse3,rmse4)
@@ -189,17 +191,8 @@ rmses
 In case you want to take a picture (screenshot) of your notebook (tablet), you can use the below lines to embed the image to the output PDF file:
 
 
-```{r,results='asis'}
-library('knitr')
-#X
-X <- c(1,2,170)
-#Y
-Y <- c(4,5,66)
-column.names <- c("Height (cm)","Weight (kg)")
-row.names <- c("Andy","Aimee","Morgan")
-result <- array(c(X,Y),dim = c(3,2),dimnames = list(row.names,column.names))
-kable(result,caption = 'Simple Dataset')
-#knitr::include_graphics('conspiracy.jpg')
+```{r}
+knitr::include_graphics('conspiracy.jpg')
 ```
 
 
