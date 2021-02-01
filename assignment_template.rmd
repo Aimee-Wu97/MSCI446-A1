@@ -41,17 +41,17 @@ rmarkdown::paged_table(anime)
 ```{r}
 anime %>% 
   select(score) %>% 
-  summarize(rank_max = max(score),
-            rank_min = min(score))
+  summarize(score_max = max(score),
+            score_min = min(score))
 ```
 
 ```{r}
 anime %>% 
   select(score, genre) %>% 
   group_by(genre) %>% 
-  summarise(rank_median = median(score),
-            rank_max  = max(score),
-            rank_min = min(score))
+  summarise(score_median = median(score),
+            score_max  = max(score),
+            score_min = min(score))
 ```
 
 ### 1.2. (10 pts) 
