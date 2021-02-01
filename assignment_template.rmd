@@ -1,13 +1,13 @@
 ---
 title: 'Lab Report 1'
-author: "your name here"
+author: "Andy Tan, Aimee Wu and Morgan Yeung"
 geometry: margin=.75in
 output:
-  pdf_document: default
-  word_document: default
   html_document:
     df_print: paged
     theme: cosmo
+  word_document: default
+  pdf_document: default
 header-includes:
 - \usepackage{graphicx}
 - \usepackage{color}
@@ -32,7 +32,7 @@ Give basic insights into your numeric variable you have picked as output variabl
 
 ```{r}
 library('tidyverse')
-Anime<- read.csv('anime.csv') %>%
+Anime<- read.csv('data/anime.csv') %>%
   na.omit(cols = 'score')
 anime <- subset(Anime, 
                 genre %in% c('Action', 'Drama', 'Space', 'Comedy', 'Supernatural', 'Fantasy'))
@@ -191,12 +191,26 @@ rmses
 In case you want to take a picture (screenshot) of your notebook (tablet), you can use the below lines to embed the image to the output PDF file:
 
 
-```{r}
-knitr::include_graphics('conspiracy.jpg')
+
+```{r,results='asis'}
+library('knitr')
+#X
+X <- c(185,175,170)
+#Y
+Y <- c(105,73,66)
+column.names <- c("Height (cm)","Weight (kg)")
+row.names <- c("","","")
+result <- array(c(X,Y),dim = c(3,2),dimnames = list(row.names,column.names))
+kable(result,caption = 'Simple Dataset')
 ```
+Hypothesis function $h_{\theta}(x) = {\theta_0} +{\theta_1}x$
+Let ${\theta_0}$ = 0
+${\theta_1}$ = 0 
+$\alpha$ = 0.0001
 
-
-
+```{r}
+knitr::include_graphics('gd.jpg')
+```
 
 
 \pagebreak
