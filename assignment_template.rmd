@@ -225,10 +225,22 @@ You will use horsepower as input variable and miles per gallon (mpg) as output:
 1. Plot the scatterplot between `mpg` ($Y$) and `horsepower` ($X$).
     - Is the relationship positive or negative? Does mpg increase or reduce as horsepower increases?
     - Is the relationship linear?
+```{r}
+library('ISLR')
+ggplot(Auto, aes(y=mpg, x=horsepower)) + 
+  geom_point() 
+```
+The relationship is negative where as horsepower increases, mpg decreases.  The relationship is non-linear and looks to be logarithmic.
 2. Plot the scatterplot between `log(mpg)` and `log(horsepower)`.
     - Is the relationship positive or negative?
     - Is the relationship linear?
+```{r}
+ggplot(Auto, aes(y=log(mpg), x=log(horsepower))) + 
+  geom_point() 
+```
+The relationship is negative, and linear
 3. Which of the two versions is better for linear regression?
+The log data is better for linear regression
 
 ### 3.2. Fill in the code
 
