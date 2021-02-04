@@ -1,6 +1,6 @@
 ---
 title: 'Lab Report 1'
-author: "Andy Tan, Aimee Wu and Morgan Yeung"
+author: "Andy Yang, Tong Wu and Morgan Yeung"
 geometry: margin=.75in
 output:
   html_document:
@@ -33,7 +33,7 @@ Give basic insights into your numeric variable you have picked as output variabl
 ```{r}
 library('tidyverse')
 Anime<- read.csv('data/anime.csv') %>%
-  na.omit(cols = 'score')
+  na.omit(anime)
 anime <- subset(Anime, 
                 genre %in% c('Action', 'Drama', 'Space', 'Comedy', 'Supernatural', 'Fantasy'))
 rmarkdown::paged_table(anime)
@@ -97,8 +97,10 @@ fit1
 summary(fit1)
 ```
 ```{r}
-ggplot(Anime, aes(y=score, x=rank, colour=genre)) + 
-  geom_point() 
+preds <- predict(fit1)
+ggplot(Anime, aes(y=score, x=rank)) + 
+  geom_point(alpha=.3, size=2) + 
+  geom_line(aes(y=preds), colour="red")
 ```
 
 ```{r}
@@ -108,7 +110,8 @@ g <- ggplot(Anime, aes(y=log(score), x=log(rank), colour=genre)) +
   theme(legend.position = 'none') 
 ggMarginal(g, type='histogram')
 ```
-  	
+Low residual standard error (0.2013) and high R-squared value (0.9188) in this case demonstrates that this is a good fit. Also, the Pr(>|t|) value is relatively small indicating the current feature(rank) has significant statistically impact on the target variable. However, the estimated coefficient is very small meaning it does not actually influence the target variable that much.   
+
 2. Using all your input variables, fit a multiple linear regression model
 
    - Write down the model
@@ -116,31 +119,28 @@ ggMarginal(g, type='histogram')
    - Interpret the results. Is it a good fit? Are the input variables good in explaining the outputs?
 
 ```{r}
-fit2 <- lm(score ~ rank + members + episodes + favorites, data = Anime)
+fit2 <- lm(score ~ rank + members + genre, data = Anime)
 summary(fit2)$coefficients
 ```
 ```{r}
 sigma(fit1)
 sigma(fit2)
 ```
+RMSE of this fit is slightly lower than fit 1 which indicates it is a better fit. The p-value estimates for coefficient of rank and members are relative smaller comparing to the other variable. This means rank and members seem to have more significant impacts towards the score. 
 
 3. Now, do the same things as you did, but this time add an interaction between one categorical and one numeric variable.
    - Write down the model, fit to the data, summarize and interpret the results.
 ```{r}
-fit3 <- lm(score ~ rank + members + source, data = Anime)
-summary(fit3)$coefficients
-```
-```{r}
-fit4 <- lm(score ~ rank + members + source + rank:source, data = Anime)
+fit3 <- lm(score ~ rank + members + genre + members:genre, data = Anime)
 summary(fit3)$coefficients
 ```
 ```{r}
 sigma(fit3)
-sigma(fit4)
 ```
-       
-4. Which model you fit is the best in predicting the output variable? Which one is the second and third best? Rank the models based on their performance.
+Adding more variables decreased the RMSE value demonstrating it is a better fit than fit2. All variables have relative small p values. Meantime, it is noticeable that the estimated coefficients of genre alone seems to be relatively higher than that of the interacting variable, members:genre. This shows the impact of interaction between members and genre may not influence the score that much. 
 
+4. Which model you fit is the best in predicting the output variable? Which one is the second and third best? Rank the models based on their performance.
+Lower RMSE values indicates the model has a better fit. Thus, fit 3 > fit 2 > fit 1.
 ### 1.4. (15 pts) 
 
 In this section, you will do the same you did in 1.3, but this time you will first split the data into train and test.
@@ -166,26 +166,24 @@ cat('train size:', nrow(train), '\ntest size:', nrow(test))
 ```{r}
 library('caret')
 fit1 <- lm(score ~ rank, data = train)
-fit2 <- lm(score ~ rank + members + episodes + favorites, data = train)
-fit3 <- lm(score ~ rank + members + source, data = train)
-fit4 <- lm(score ~ rank + members + source + rank:source, data = train)
+fit2 <- lm(score ~ rank + members + genre, data = train)
+fit3 <- lm(score ~ rank + members + genre + members:genre, data = train)
+
 
 pred1 <- predict(fit1, newdata=test)
 pred2 <- predict(fit2, newdata=test)
 pred3 <- predict(fit3, newdata=test)
-pred4 <- predict(fit4, newdata=test)
 
 
 rmse1 <- RMSE(pred1, test$score)
 rmse2 <- RMSE(pred2, test$score)
 rmse3 <- RMSE(pred3, test$score)
-rmse4 <- RMSE(pred4, test$score)
 
 
-rmses <- c(rmse1,rmse2,rmse3,rmse4)
+rmses <- c(rmse1,rmse2,rmse3)
 rmses
 ```
-
+The models are ranked as the following. Performance rating: fit3 > fit2 > fit1. This is the same as the one we had in 1.3. 
 \pagebreak
 
 ## Question 2: Gradient Descent Algorithm (By hand)
