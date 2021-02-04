@@ -29,7 +29,7 @@ Give basic insights into your numeric variable you have picked as output variabl
 - What are the min / max values and median of the output variable, $Y$?
 - What is median of the output value among different classes of the categorical variable you picked? You must use `group_by` and `summarize` functions.
 
-
+4 variables are chosen: score, rank, members, genre
 ```{r}
 library('tidyverse')
 Anime<- read.csv('data/anime.csv') %>%
