@@ -102,6 +102,7 @@ ggplot(Anime, aes(y=score, x=rank)) +
   geom_point(alpha=.3, size=2) + 
   geom_line(aes(y=preds), colour="red")
 ```
+Low residual standard error (0.2013) and high R-squared value (0.9188) in this case demonstrates that this is a good fit. Also, the Pr(>|t|) value is relatively small indicating the current feature(rank) has significant statistically impact on the target variable. However, the estimated coefficient is very small meaning it does not actually influence the target variable that much.   
 
 ```{r}
 library('ggExtra')
@@ -110,8 +111,6 @@ g <- ggplot(Anime, aes(y=log(score), x=log(rank), colour=genre)) +
   theme(legend.position = 'none') 
 ggMarginal(g, type='histogram')
 ```
-Low residual standard error (0.2013) and high R-squared value (0.9188) in this case demonstrates that this is a good fit. Also, the Pr(>|t|) value is relatively small indicating the current feature(rank) has significant statistically impact on the target variable. However, the estimated coefficient is very small meaning it does not actually influence the target variable that much.   
-
 2. Using all your input variables, fit a multiple linear regression model
 
    - Write down the model
@@ -140,7 +139,7 @@ sigma(fit3)
 Adding more variables decreased the RMSE value demonstrating it is a better fit than fit2. All variables have relative small p values. Meantime, it is noticeable that the estimated coefficients of genre alone seems to be relatively higher than that of the interacting variable, members:genre. This shows the impact of interaction between members and genre may not influence the score that much. 
 
 4. Which model you fit is the best in predicting the output variable? Which one is the second and third best? Rank the models based on their performance.
-Lower RMSE values indicates the model has a better fit. Thus, fit 3 > fit 2 > fit 1.
+Lower RMSE values indicates the model has a better fit. Thus, fit3 > fit2 > fit1.
 ### 1.4. (15 pts) 
 
 In this section, you will do the same you did in 1.3, but this time you will first split the data into train and test.
