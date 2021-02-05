@@ -3,16 +3,17 @@ title: 'Lab Report 1'
 author: "Andy Yang, Tong Wu and Morgan Yeung"
 geometry: margin=.75in
 output:
+  pdf_document: default
+  word_document: default
   html_document:
     df_print: paged
     theme: cosmo
-  word_document: default
-  pdf_document: default
 header-includes:
 - \usepackage{graphicx}
 - \usepackage{color}
 graphics: yes
 fontsize: 11pt
+always_allow_html: true
 ---
 
 <!-- You can check templates from this website and change html theme: https://www.datadreaming.org/post/r-markdown-theme-gallery/ -->
@@ -29,7 +30,7 @@ Give basic insights into your numeric variable you have picked as output variabl
 - What are the min / max values and median of the output variable, $Y$?
 - What is median of the output value among different classes of the categorical variable you picked? You must use `group_by` and `summarize` functions.
 
-4 variables are chosen: score, rank, members, genre
+4 variables are chosen: score (Y), rank, members, genre, favorites
 ```{r}
 library('tidyverse')
 Anime<- read.csv('data/anime.csv') %>%
@@ -60,8 +61,17 @@ Visualize the variables you selected.
 
 - Draw histogram of the numeric variables you selected.
 ```{r}
-ggplot(anime, aes(x=score)) + 
-  geom_histogram(colour='white') 
+library(gridExtra)
+g1<- ggplot(anime) + 
+  geom_histogram(aes(x = score), colour='white') 
+g2<- ggplot(anime) +
+  geom_histogram(aes(x = members), colour='white')
+g3<- ggplot(anime) +
+  geom_histogram(aes(x = rank), colour='white')
+g4<- ggplot(anime) +
+  geom_histogram(aes(x = favorites), colour='white')
+
+grid.arrange(g1,g2,g3,g4, ncol=2)
 ```
 
 - Draw distribution of the output variable $Y$ with respect to the different classes of your categorical variable. The plot must somehow show the distributional differences among different classes. You can use boxplot, histogram, or other visuals (e.g. density ringes).
@@ -76,6 +86,7 @@ ggplot(anime, aes(x=score, y=genre, colour=genre)) +
 ggplot(anime, aes(y=score, x=rank, colour=genre)) + 
   geom_point() 
 ```
+
 The plot does indicate a relationship between score and rank.  There is a linear region in the data from approximately ranks 1000-8000.  The other regions exhibit a more exponential relationship.  There are several outliers in the data, which can be completely removed by filtering using scored_by > 1000.  These scores are outliers as they have not been scored by enough people to be statistically significant hence why the rank of the anime is so low.  
 
 ### 1.3. (15 pts) 
@@ -102,6 +113,7 @@ ggplot(Anime, aes(y=score, x=rank)) +
   geom_point(alpha=.3, size=2) + 
   geom_line(aes(y=preds), colour="red")
 ```
+
 Low residual standard error (0.2013) and high R-squared value (0.9188) in this case demonstrates that this is a good fit. Also, the Pr(>|t|) value is relatively small indicating the current feature(rank) has significant statistically impact on the target variable. However, the estimated coefficient is very small meaning it does not actually influence the target variable that much.   
 
 ```{r}
@@ -111,6 +123,7 @@ g <- ggplot(Anime, aes(y=log(score), x=log(rank), colour=genre)) +
   theme(legend.position = 'none') 
 ggMarginal(g, type='histogram')
 ```
+
 2. Using all your input variables, fit a multiple linear regression model
 
    - Write down the model
@@ -118,28 +131,39 @@ ggMarginal(g, type='histogram')
    - Interpret the results. Is it a good fit? Are the input variables good in explaining the outputs?
 
 ```{r}
-fit2 <- lm(score ~ rank + members + genre, data = Anime)
+fit2 <- lm(score ~ rank + members + favorites + genre, data = Anime)
 summary(fit2)$coefficients
 ```
 ```{r}
 sigma(fit1)
 sigma(fit2)
 ```
-RMSE of this fit is slightly lower than fit 1 which indicates it is a better fit. The p-value estimates for coefficient of rank and members are relative smaller comparing to the other variable. This means rank and members seem to have more significant impacts towards the score. 
+
+RMSE of this fit is slightly lower than fit 1 which indicates it is a better fit. The p-value estimates for the coefficient of rank, members and favorites are relative smaller compared to the other variables. This means rank, members and favorites seem to have more significant impacts towards the score. 
 
 3. Now, do the same things as you did, but this time add an interaction between one categorical and one numeric variable.
    - Write down the model, fit to the data, summarize and interpret the results.
 ```{r}
-fit3 <- lm(score ~ rank + members + genre + members:genre, data = Anime)
+fit3 <- lm(score ~ rank + members + favorites + genre + members:genre, data = Anime)
 summary(fit3)$coefficients
 ```
 ```{r}
 sigma(fit3)
 ```
-Adding more variables decreased the RMSE value demonstrating it is a better fit than fit2. All variables have relative small p values. Meantime, it is noticeable that the estimated coefficients of genre alone seems to be relatively higher than that of the interacting variable, members:genre. This shows the impact of interaction between members and genre may not influence the score that much. 
+
+Adding more variables decreased the RMSE value demonstrating it is a better fit than fit2. Most variables have relative small p values. Meantime, it is noticeable that the estimated coefficients of genre alone seems to be relatively higher than that of the interacting variable, members:genre. This shows the impact of interaction between members and genre may not influence the score that much. 
 
 4. Which model you fit is the best in predicting the output variable? Which one is the second and third best? Rank the models based on their performance.
-Lower RMSE values indicates the model has a better fit. Thus, fit3 > fit2 > fit1.
+
+
+```{r}
+sigma(fit1)
+sigma(fit2)
+sigma(fit3)
+```
+
+Lower RMSE values indicates the model has a better fit. Thus, fit3 > fit2 > fit1. 
+
 ### 1.4. (15 pts) 
 
 In this section, you will do the same you did in 1.3, but this time you will first split the data into train and test.
@@ -165,8 +189,8 @@ cat('train size:', nrow(train), '\ntest size:', nrow(test))
 ```{r}
 library('caret')
 fit1 <- lm(score ~ rank, data = train)
-fit2 <- lm(score ~ rank + members + genre, data = train)
-fit3 <- lm(score ~ rank + members + genre + members:genre, data = train)
+fit2 <- lm(score ~ rank + members + favorites + genre, data = train)
+fit3 <- lm(score ~ rank + members + favorites + genre + members:genre, data = train)
 
 
 pred1 <- predict(fit1, newdata=test)
@@ -182,6 +206,7 @@ rmse3 <- RMSE(pred3, test$score)
 rmses <- c(rmse1,rmse2,rmse3)
 rmses
 ```
+
 The models are ranked as the following. Performance rating: fit3 > fit2 > fit1. This is the same as the one we had in 1.3. 
 \pagebreak
 
@@ -229,6 +254,7 @@ library('ISLR')
 ggplot(Auto, aes(y=mpg, x=horsepower)) + 
   geom_point() 
 ```
+
 The relationship is negative where as horsepower increases, mpg decreases.  The relationship is non-linear and looks to be logarithmic.
 2. Plot the scatterplot between `log(mpg)` and `log(horsepower)`.
     - Is the relationship positive or negative?
@@ -237,6 +263,7 @@ The relationship is negative where as horsepower increases, mpg decreases.  The 
 ggplot(Auto, aes(y=log(mpg), x=log(horsepower))) + 
   geom_point() 
 ```
+
 The relationship is negative, and linear, which makes sense after applying the log() function on the data above which seemed to have a logarithmic relationship.  
 3. Which of the two versions is better for linear regression?
 The log data is better for linear regression
@@ -304,7 +331,9 @@ theta0 <- c(1,1)
 theta   <- GDA(x, y, theta0, alpha = 0.05, epsilon = 1e-5)
 plot_line(theta)
 ```
-It took 3193 iterations to converge on the parameters.
+
+
+Using alpha of 0.05 and epsilon of 1e-5, it took 3193 iterations to converge on the parameters.  The resulting line doesn't accurately predict the data, so the parameters should be better tuned by changing the input parameters.  
 
 2. Reduce epsilon to `1e-6`, set `alpha=0.05` run the code. 
     - How many iterations did it take to estimate the parameters?
@@ -323,7 +352,9 @@ theta0 <- c(1,1)
 theta   <- GDA(x, y, theta0, alpha = 0.05, epsilon = 1e-6)
 plot_line(theta)
 ```
-After lowering the learning rate, it took 7531 iterations for the algorithm to converge on the parameters. However, by reducing epsilon, the result seems to improve which is counter-intuitive as the algorithm should stop earlier due to the improvements to the function being stopped earlier.  
+
+
+After lowering the learning rate to 0.05, it took 7531 iterations for the algorithm to converge on the parameters. However, by reducing epsilon, the result seems to improve which is counter-intuitive as the algorithm should stop earlier due to the improvements to the function being stopped earlier.  
 3. Reduce alpha to `alpha=0.01`
    - How many iterations did it take?
    - Did the resulting line change? Why or why not?
@@ -341,8 +372,9 @@ theta0 <- c(1,1)
 theta   <- GDA(x, y, theta0, alpha = 0.01, epsilon = 1e-6)
 plot_line(theta)
 ```
-22490 iterations
-The line changes slightly 
+
+
+Using alpha = 0.01 and episilon of 1e-6, the algorithm takes 22490 iterations to converge.  The line changes slightly for the worse and doesn't predict the data as accurately as before.  This could be due to the fact that our learning factor is a fifth of what it was before, but we did not complete 5 times as many iterations, before we converged to a local optima.  Perhaps lowering epsilon to get out of that local optima is needed to improve the result    
 
 4. Set alpha back to `alpha=0.05` and try `theta0=c(1,1)` vs. `theta0=c(1,-1)`:
    - How many iterations did it take? Which is less than the other?
@@ -392,9 +424,10 @@ theta2   <- GDA(x, y, theta0, alpha = 0.05, epsilon = 1e-8)
 plot_line(theta2)
 
 ```
+
 When running on a high alpha value, it can result in divergence where we will hit the maximum iterations.  However, when it is too low in case alpha = 0.01, it can also not converge fast enough where the result will be sub-optimal after the maximum iterations, this is seen in the graph with the line not as accurately representing the data compared to alpha = 0.05
 
-
+\pagebreak
 ### 4 BGD vs. SGD
 ```{r}
 BGD <- function(x, y, theta0, alpha = 0.01, epsilon = 1e-8, max_iter=25000){
@@ -488,4 +521,5 @@ ggplot() +
   geom_point(aes(x=1:length(loss), y=loss)) +
   labs(x='iteration')
 ```
+
 BGD resulted in lower losses than SGD.  This is due to BGD using the entire dataset whereas SGD only uses a single random point.  Even though they both used 10 iterations, the number of computations in BGD is significantly higher which leads to a more accurate result.  
