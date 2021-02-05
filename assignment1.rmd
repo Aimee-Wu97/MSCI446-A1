@@ -30,7 +30,7 @@ Give basic insights into your numeric variable you have picked as output variabl
 - What are the min / max values and median of the output variable, $Y$?
 - What is median of the output value among different classes of the categorical variable you picked? You must use `group_by` and `summarize` functions.
 
-4 variables are chosen: score, rank, members, genre
+4 variables are chosen: score (Y), rank, members, genre, favorites
 ```{r}
 library('tidyverse')
 Anime<- read.csv('data/anime.csv') %>%
@@ -61,8 +61,17 @@ Visualize the variables you selected.
 
 - Draw histogram of the numeric variables you selected.
 ```{r}
-ggplot(anime, aes(x=score)) + 
-  geom_histogram(colour='white') 
+library(gridExtra)
+g1<- ggplot(anime) + 
+  geom_histogram(aes(x = score), colour='white') 
+g2<- ggplot(anime) +
+  geom_histogram(aes(x = members), colour='white')
+g3<- ggplot(anime) +
+  geom_histogram(aes(x = rank), colour='white')
+g4<- ggplot(anime) +
+  geom_histogram(aes(x = favorites), colour='white')
+
+grid.arrange(g1,g2,g3,g4, ncol=2)
 ```
 
 - Draw distribution of the output variable $Y$ with respect to the different classes of your categorical variable. The plot must somehow show the distributional differences among different classes. You can use boxplot, histogram, or other visuals (e.g. density ringes).
@@ -122,7 +131,7 @@ ggMarginal(g, type='histogram')
    - Interpret the results. Is it a good fit? Are the input variables good in explaining the outputs?
 
 ```{r}
-fit2 <- lm(score ~ rank + members + genre, data = Anime)
+fit2 <- lm(score ~ rank + members + favorites + genre, data = Anime)
 summary(fit2)$coefficients
 ```
 ```{r}
@@ -130,22 +139,30 @@ sigma(fit1)
 sigma(fit2)
 ```
 
-RMSE of this fit is slightly lower than fit 1 which indicates it is a better fit. The p-value estimates for coefficient of rank and members are relative smaller comparing to the other variable. This means rank and members seem to have more significant impacts towards the score. 
+RMSE of this fit is slightly lower than fit 1 which indicates it is a better fit. The p-value estimates for the coefficient of rank, members and favorites are relative smaller compared to the other variables. This means rank, members and favorites seem to have more significant impacts towards the score. 
 
 3. Now, do the same things as you did, but this time add an interaction between one categorical and one numeric variable.
    - Write down the model, fit to the data, summarize and interpret the results.
 ```{r}
-fit3 <- lm(score ~ rank + members + genre + members:genre, data = Anime)
+fit3 <- lm(score ~ rank + members + favorites + genre + members:genre, data = Anime)
 summary(fit3)$coefficients
 ```
 ```{r}
 sigma(fit3)
 ```
 
-Adding more variables decreased the RMSE value demonstrating it is a better fit than fit2. All variables have relative small p values. Meantime, it is noticeable that the estimated coefficients of genre alone seems to be relatively higher than that of the interacting variable, members:genre. This shows the impact of interaction between members and genre may not influence the score that much. 
+Adding more variables decreased the RMSE value demonstrating it is a better fit than fit2. Most variables have relative small p values. Meantime, it is noticeable that the estimated coefficients of genre alone seems to be relatively higher than that of the interacting variable, members:genre. This shows the impact of interaction between members and genre may not influence the score that much. 
 
 4. Which model you fit is the best in predicting the output variable? Which one is the second and third best? Rank the models based on their performance.
-Lower RMSE values indicates the model has a better fit. Thus, fit3 > fit2 > fit1.
+
+
+```{r}
+sigma(fit1)
+sigma(fit2)
+sigma(fit3)
+```
+
+Lower RMSE values indicates the model has a better fit. Thus, fit3 > fit2 > fit1. 
 
 ### 1.4. (15 pts) 
 
@@ -172,8 +189,8 @@ cat('train size:', nrow(train), '\ntest size:', nrow(test))
 ```{r}
 library('caret')
 fit1 <- lm(score ~ rank, data = train)
-fit2 <- lm(score ~ rank + members + genre, data = train)
-fit3 <- lm(score ~ rank + members + genre + members:genre, data = train)
+fit2 <- lm(score ~ rank + members + favorites + genre, data = train)
+fit3 <- lm(score ~ rank + members + favorites + genre + members:genre, data = train)
 
 
 pred1 <- predict(fit1, newdata=test)
